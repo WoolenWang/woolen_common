@@ -1,0 +1,20 @@
+# coding: utf8
+#  =============================切记本配置文件的总体换行格式等不可改变,否则会出问题 ================================================
+#  level:: trace debug info warn error fatal
+dev:
+  level: debug
+  stdout: 1
+  file: ./log/dev.log
+  log_cache: 0
+  roll_type: file_size
+  max_log_cnt: 10
+  roll_param: 5M          # support K/M
+pro:
+  level: info
+  stdout: 0
+  file: ./log/pro.log
+  log_cache: 3
+  roll_type: daily
+  max_log_cnt: 3
+  roll_param:               # if use daily, this param should be null
+default: dev
