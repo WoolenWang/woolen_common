@@ -186,7 +186,7 @@ module WoolenCommon
                 else
                     @cache_msg.each do |key,value|
                         my_puts value, COLORS[key] if @stdout
-                        puts "need to log with #{@file} [#{value}]"
+                        #puts "need to log with #{@file} [#{value}]"
                         @file.puts value if @file
                         #@file.dup if @file
                         @cache_msg = {}
