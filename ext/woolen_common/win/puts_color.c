@@ -123,7 +123,7 @@ void reset_color()
 	int mod_mask = 0x00ff,color_mod = 0;
     color_mod = get_color_mod("silver","black");
     SetConsoleTextAttribute(hOut,mod_mask & color_mod);
-    printf("");
+    //printf("");
 }
 int puts_color(const char * front, const char * back, const char * msg)
 {
