@@ -5,12 +5,13 @@ require 'fileutils'
 require 'pathname'
 require "#{File.join(File.dirname(__FILE__), 'system_helper')}"
 require "#{File.join(File.dirname(__FILE__), 'config_manager')}"
+require 'woolen_common.so'
 module WoolenCommon
     class MyLogger # :nodoc: all
         include SystemHelper
         LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']
         COLORS = { 'TRACE'=>'white','DEBUG' => 'silver', 'INFO' => 'green', 'WARN' => 'yellow', 'ERROR' => 'purple', 'FATAL' => 'red' }
-        WIN_PRINTER = Pathname.new(File.join(__FILE__, '..', '..', '..', 'bin', 'puts_color.exe')).realpath.to_s
+        # WIN_PRINTER = Pathname.new(File.join(__FILE__, '..', '..', '..', 'bin', 'puts_color.exe')).realpath.to_s
         attr_reader :file, :stdout, :name
         attr_accessor :level,:log_cache,:cache_msg,:cache_count
 
@@ -23,7 +24,8 @@ module WoolenCommon
                 #puts "#{WIN_PRINTER} #{the_color} default \"#{message}\""
                 #system("#{WIN_PRINTER} #{the_color} default \"#{message}\n\"")
                 begin
-                    system("#{WIN_PRINTER} #{the_color} default \"#{message.gsub('"', '\"')}\"")
+                    c_puts_color the_color,'default',message
+                    # system("#{WIN_PRINTER} #{the_color} default \"#{message.gsub('"', '\"')}\"")
                 rescue Exception => e
                     puts "#{message}"
                 end
@@ -196,7 +198,7 @@ module WoolenCommon
                 end
                 @last_log_time = Time.now
             rescue Exception => e
-                puts "\n==========log error !!! err msg is [#{e.message}] you need to log is \n#{_msg}\n"
+                puts "\n==========log error !!! err msg is [#{e.message}][stack::#{e.backtrace.join("\n")}] you need to log is \n#{_msg}\n"
             end
         end
 
