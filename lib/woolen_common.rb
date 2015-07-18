@@ -1,5 +1,6 @@
 # -*- encoding : utf-8 -*-
 require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'version')}"
+require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'actionpool')}"
 require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'config_manager')}"
 
 module WoolenCommon

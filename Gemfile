@@ -5,5 +5,4 @@ else
     source 'https://rubygems.org'
 end
 # Specify your gem's dependencies in woolen_common.gemspec
-gem 'actionpool','0.2.3'
 gemspec

@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 require 'singleton'
-require 'actionpool'
+require "#{File.join(File.dirname(__FILE__), 'actionpool')}"
 require "#{File.join(File.dirname(__FILE__), 'logger')}"
 module WoolenCommon
     class ActionPoolProxy < BasicObject

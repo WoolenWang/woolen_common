@@ -186,15 +186,20 @@ module WoolenCommon
                 if @cache_count < @log_cache.to_i
                     @cache_count += 1
                 else
-                    @cache_msg.each do |key,value|
+                    file_need_to_pus_cache = ''
+                    the_msg_cache = @cache_msg
+                    @cache_count = 0
+                    @cache_msg = {}
+                    the_msg_cache.each do |key,value|
                         my_puts value, COLORS[key] if @stdout
                         #puts "need to log with #{@file} [#{value}]"
-                        @file.puts value if @file
+                        file_need_to_pus_cache << value
                         #@file.dup if @file
-                        @cache_msg = {}
                     end
-                    @file.flush if @file
-                    @cache_count = 0
+                    if @file
+                        @file.print file_need_to_pus_cache
+                        @file.flush
+                    end
                 end
                 @last_log_time = Time.now
             rescue Exception => e
