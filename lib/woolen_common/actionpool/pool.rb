@@ -1,5 +1,5 @@
-require "#{File.join(File.dirname(__FILE__), 'Thread')}"
-require "#{File.join(File.dirname(__FILE__), 'Queue')}"
+require "#{File.join(File.dirname(__FILE__), 'thread')}"
+require "#{File.join(File.dirname(__FILE__), 'queue')}"
 require 'logger'
 require 'thread'
 
