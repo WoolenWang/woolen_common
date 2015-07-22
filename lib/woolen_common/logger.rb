@@ -10,10 +10,10 @@ module WoolenCommon
     class MyLogger # :nodoc: all
         include SystemHelper
         LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']
-        COLORS = { 'TRACE'=>'white','DEBUG' => 'silver', 'INFO' => 'green', 'WARN' => 'yellow', 'ERROR' => 'purple', 'FATAL' => 'red' }
+        COLORS = { 'TRACE' => 'white', 'DEBUG' => 'silver', 'INFO' => 'green', 'WARN' => 'yellow', 'ERROR' => 'purple', 'FATAL' => 'red' }
         # WIN_PRINTER = Pathname.new(File.join(__FILE__, '..', '..', '..', 'bin', 'puts_color.exe')).realpath.to_s
         attr_reader :file, :stdout, :name
-        attr_accessor :level,:log_cache,:cache_msg,:cache_count
+        attr_accessor :level, :log_cache, :cache_msg, :cache_count
 
         LOGGERS = []
 
@@ -24,8 +24,8 @@ module WoolenCommon
                 #puts "#{WIN_PRINTER} #{the_color} default \"#{message}\""
                 #system("#{WIN_PRINTER} #{the_color} default \"#{message}\n\"")
                 begin
-                    c_puts_color the_color,'default',message
-                    # system("#{WIN_PRINTER} #{the_color} default \"#{message.gsub('"', '\"')}\"")
+                    c_puts_color the_color, 'default', message
+                        # system("#{WIN_PRINTER} #{the_color} default \"#{message.gsub('"', '\"')}\"")
                 rescue Exception => e
                     puts "#{message}"
                 end
@@ -107,11 +107,11 @@ module WoolenCommon
             # fix Error::EACCESS exception throw when file is opened before rename by lyf
             begin
                 FileUtils.cp(@file.path, newfilename)
-                log_patten = File.join(File.dirname(@file),'*.log')
+                log_patten = File.join(File.dirname(@file), '*.log')
                 @file.flush
                 @file.close
                 FileUtils.rm_f(@file.path)
-                sort_time_files = Dir[log_patten].sort_by { |file| test(?M,file)}
+                sort_time_files = Dir[log_patten].sort_by { |file| test(?M, file) }
                 if @max_log_cnt && @max_log_cnt > 0 && sort_time_files.length > @max_log_cnt
                     (@max_log_cnt - sort_time_files.length).times do |cnt|
                         FileUtils.rm_f sort_time_files[cnt]
@@ -190,7 +190,7 @@ module WoolenCommon
                     the_msg_cache = @cache_msg
                     @cache_count = 0
                     @cache_msg = {}
-                    the_msg_cache.each do |key,value|
+                    the_msg_cache.each do |key, value|
                         my_puts value, COLORS[key] if @stdout
                         #puts "need to log with #{@file} [#{value}]"
                         file_need_to_pus_cache << value
@@ -229,30 +229,37 @@ module WoolenCommon
 
         def soft(*msg)
             log('SOFT ', msg.join(','), nil) if true
+            nil
         end
 
-        def trace(msg,err = nil)
+        def trace(msg, err = nil)
             log('TRACE ', msg, err) if @level == 0
+            nil
         end
 
         def debug(msg, err = nil)
             log('DEBUG ', msg, err) if @level <= 1
+            nil
         end
 
         def info(msg, err = nil)
             log('INFO  ', msg, err) if @level <= 2
+            nil
         end
 
         def warn(msg, err = nil)
             log('WARN  ', msg, err) if @level <= 3
+            nil
         end
 
         def error(msg, err = nil)
             log('ERROR ', msg, err) if @level <= 4
+            nil
         end
 
         def fatal(msg, err = nil)
             log('FATAL ', msg, err)
+            nil
         end
 
         def debug?
@@ -337,6 +344,7 @@ module WoolenCommon
         def debug?
             SingleLogger.get_logger.debug?
         end
+
         def info?
             SingleLogger.get_logger.info?
         end
