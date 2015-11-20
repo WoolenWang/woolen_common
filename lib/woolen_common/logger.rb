@@ -5,54 +5,90 @@ require 'fileutils'
 require 'pathname'
 require "#{File.join(File.dirname(__FILE__), 'system_helper')}"
 require "#{File.join(File.dirname(__FILE__), 'config_manager')}"
-require 'woolen_common.so'
+require "#{File.join(File.dirname(__FILE__),'ffi', 'win32_kernel32')}"
 module WoolenCommon
     class MyLogger # :nodoc: all
         include SystemHelper
         LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']
         COLORS = { 'TRACE' => 'white', 'DEBUG' => 'silver', 'INFO' => 'green', 'WARN' => 'yellow', 'ERROR' => 'purple', 'FATAL' => 'red' }
+        FOREGROUND_BLUE = 1
+        FOREGROUND_GREEN = 2
+        FOREGROUND_RED = 4
+        FOREGROUND_INTENSITY = 8
+        BACKGROUND_BLUE = 16
+        BACKGROUND_GREEN = 32
+        BACKGROUND_RED = 64
+        BACKGROUND_INTENSITY = 128
+        WIN32COLORS = [
+          "default",	"black",		"navy",			"green",
+          "teal",		"maroon",		"purple",		"olive",
+          "silver",	"gray",			"blue",			"lime",
+          "aqua",		"red",			"fuchsia",		"yellow",
+          "white"
+        ]
+        WIN32_FOREGROUND_COLOR_MOD = [
+          -1,0,
+          FOREGROUND_BLUE , FOREGROUND_GREEN ,FOREGROUND_BLUE | FOREGROUND_GREEN,
+          FOREGROUND_RED,	FOREGROUND_BLUE | FOREGROUND_RED,FOREGROUND_RED | FOREGROUND_GREEN,
+          FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
+        ]
+        WIN32_BACKGROUND_COLOR_MOD = [
+          -1,0,
+          BACKGROUND_BLUE , BACKGROUND_GREEN ,BACKGROUND_BLUE | BACKGROUND_GREEN,
+          BACKGROUND_RED,	BACKGROUND_BLUE | BACKGROUND_RED,BACKGROUND_RED | BACKGROUND_GREEN,
+          BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
+        ]
         # WIN_PRINTER = Pathname.new(File.join(__FILE__, '..', '..', '..', 'bin', 'puts_color.exe')).realpath.to_s
         attr_reader :file, :stdout, :name
         attr_accessor :level, :log_cache, :cache_msg, :cache_count
 
         LOGGERS = []
 
+        def linux_puts_color(message, color = nil)
+            case color
+                when 'red'
+                    color = '31;1'
+                when 'green'
+                    color = '32;1'
+                when 'yellow'
+                    color = '33;1'
+                when 'blue'
+                    color = '34;1'
+                when 'purple'
+                    color = '35;1'
+                when 'silver'
+                    color = '36;1'
+                when 'white'
+                    color = '37;1'
+                else
+                    color = ''
+            end
+            if color == ''
+                print "#{message}\n"
+            else
+                print "\e[#{color}m#{message}\e[0m\n"
+            end
+        end
+
+        def win32_puts_color(message,color)
+            the_out_handle = Win32Kernel32.getStdHandle Win32Kernel32::STD_OUTPUT_HANDLE
+            if WIN32COLORS.include? color
+              if WIN32COLORS.index(color) >= WIN32_FOREGROUND_COLOR_MOD.length
+                the_color_mod = WIN32_FOREGROUND_COLOR_MOD[WIN32COLORS.index(color) % WIN32_FOREGROUND_COLOR_MOD.length] | FOREGROUND_INTENSITY
+              else
+                the_color_mod = WIN32_FOREGROUND_COLOR_MOD[WIN32COLORS.index(color)]
+              end
+            end
+            Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & the_color_mod
+            printf "#{message}\n"
+            Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED )
+        end
+
         def my_puts(message, color = nil)
             if windows?
-                the_color = color || 'default'
-                #puts WIN_PRINTER
-                #puts "#{WIN_PRINTER} #{the_color} default \"#{message}\""
-                #system("#{WIN_PRINTER} #{the_color} default \"#{message}\n\"")
-                begin
-                    c_puts_color the_color, 'default', message
-                        # system("#{WIN_PRINTER} #{the_color} default \"#{message.gsub('"', '\"')}\"")
-                rescue Exception => e
-                    puts "#{message}"
-                end
+                win32_puts_color message, color
             else
-                case color
-                    when 'red'
-                        color = '31;1'
-                    when 'green'
-                        color = '32;1'
-                    when 'yellow'
-                        color = '33;1'
-                    when 'blue'
-                        color = '34;1'
-                    when 'purple'
-                        color = '35;1'
-                    when 'silver'
-                        color = '36;1'
-                    when 'white'
-                        color = '37;1'
-                    else
-                        color = ''
-                end
-                if color == ''
-                    print "#{message}\n"
-                else
-                    print "\e[#{color}m#{message}\e[0m\n"
-                end
+                linux_puts_color message, color
             end
         end
 

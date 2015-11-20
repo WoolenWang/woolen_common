@@ -127,8 +127,8 @@ void reset_color()
 }
 int puts_color(const char * front, const char * back, const char * msg)
 {
-    HANDLE hOut;
-    int mod_mask = 0x00ff;  
+//    HANDLE hOut;
+    int mod_mask = 0x00ff;
     int color_mod = 0;
     color_mod = get_color_mod(front,back);
     hOut = GetStdHandle(STD_OUTPUT_HANDLE);
