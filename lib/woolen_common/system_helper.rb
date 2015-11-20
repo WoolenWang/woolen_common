@@ -32,6 +32,13 @@ module WoolenCommon
             case RUBY_PLATFORM
                 when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
                     return true
+                when /java/
+                    begin
+                      require 'Win32API'
+                      return true
+                    rescue Exception
+                      return false
+                    end
                 else
                     return false
             end
