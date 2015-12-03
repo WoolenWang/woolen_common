@@ -5,7 +5,6 @@ require 'fileutils'
 require 'pathname'
 require "#{File.join(File.dirname(__FILE__), 'system_helper')}"
 require "#{File.join(File.dirname(__FILE__), 'config_manager')}"
-require "#{File.join(File.dirname(__FILE__),'ffi', 'win32_kernel32')}"
 module WoolenCommon
     class MyLogger # :nodoc: all
         include SystemHelper
@@ -71,6 +70,7 @@ module WoolenCommon
         end
 
         def win32_puts_color(message,color)
+            require "#{File.join(File.dirname(__FILE__),'ffi', 'win32_kernel32')}"
             the_out_handle = Win32Kernel32.getStdHandle Win32Kernel32::STD_OUTPUT_HANDLE
             if WIN32COLORS.include? color
               if WIN32COLORS.index(color) >= WIN32_FOREGROUND_COLOR_MOD.length

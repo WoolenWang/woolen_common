@@ -8,6 +8,7 @@ module RubyProxy
         include WoolenCommon::ToolLogger
         JOBS_QUEUE = Queue.new
         JOBS_FINISH_ARRAY = []
+        JOBS_RETURN_ARRAY = []
         MAX_HANDLE_THREAD = 1
         $__proxy_job_id ||= 0
 
@@ -53,6 +54,7 @@ module RubyProxy
                     ret = proxy_module(klass_name).send(method, *arg)
                 end
                 debug "finish proxy action:#{method}"
+                JOBS_RETURN_ARRAY[job[:id]] = ret
                     # return ret
             rescue Exception => e
                 error "proxy invoke error:#{e.message}", e
@@ -67,6 +69,12 @@ module RubyProxy
             else
                 false
             end
+        end
+
+        def self.get_the_job_ret(job_id)
+            the_ret = JOBS_RETURN_ARRAY[job_id]
+            JOBS_RETURN_ARRAY[job_id] = nil
+            the_ret
         end
 
         def self.copy_env(env_hash)
