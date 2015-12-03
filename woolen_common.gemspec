@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['just_woolen@qq.com']
   spec.summary       = %q{woolen_common}
   spec.description   = %q{The common helper for dev in ruby}
-  spec.homepage      = ''
+  spec.homepage      = 'https://github.com/WoolenWang/woolen_common'
   spec.license       = 'MIT'
 
   spec.files         = Dir.glob('{lib,bin,ext}/**/*') + %w( README.md )
@@ -22,6 +22,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'bundler', '~> 1.7'
   spec.add_development_dependency 'rake', '~> 10.0'
 
-  spec.add_dependency 'splib'
-  spec.add_dependency 'ffi'
+  spec.add_dependency 'ffi','~> 0'
 end
