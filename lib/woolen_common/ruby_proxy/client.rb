@@ -6,31 +6,43 @@ require 'timeout'
 require 'socket'
 
 module ATU
+    class ATUConfig
+        class << self
+            attr_accessor :timeout
+        end
+    end
+    ATUConfig.timeout = 900
     class ClientRet
         include WoolenCommon::ToolLogger
-        MAX_JOB_CHECK_TIME = 900
         class << self
-            attr_accessor :client_ret
+            attr_accessor :job_id
             def check_job_done
                 # 60 * 10 / 0.5  10分钟内跑不完认为任务结束
                 start_time = Time.now.to_i
                 cnt = 0
                 loop do
-                    if RubyProxy::DRbClient.client.is_job_done?(self.client_ret)
-                        debug "job[#{client_ret}] done"
-                        break
+                    if RubyProxy::DRbClient.client.is_job_done?(self.job_id)
+                        debug "job[#{job_id}] done"
+                        return true
                     else
                         cnt += 1
                         if cnt % 20 == 1
-                            debug "job[#{client_ret}] is still running"
+                            debug "job[#{job_id}] is still running"
                         end
                         sleep 0.5
-                        if Time.now.to_i - start_time > MAX_JOB_CHECK_TIME
-                            warn "the time to check job done is over #{MAX_JOB_CHECK_TIME} sec"
-                            break
+                        if Time.now.to_i - start_time > ATUConfig.timeout
+                            warn "the time to check job done is over #{ATUConfig.timeout} sec"
+                            return false
                         end
                     end
                 end
+            end
+
+            def get_job_ret
+                if check_job_done
+                    return RubyProxy::DRbClient.client.get_the_job_ret(self.job_id)
+                end
+                nil
             end
         end
     end
@@ -108,8 +120,8 @@ module ATU
                         def self.method_missing(name, *arg, &block)
                             # puts "need to do method_missing :#{name}"
                             RubyProxy::DRbClient.client.copy_env(ENV.to_hash)
-                            ClientRet.client_ret = RubyProxy::DRbClient.client.proxy(self.name.to_s, name.to_s, *arg, &block)
-                            ClientRet.check_job_done
+                            ClientRet.job_id = RubyProxy::DRbClient.client.proxy(self.name.to_s, name.to_s, *arg, &block)
+                            ClientRet.get_job_ret
                             # puts "need to do client_proxy_ret :#{ClientRet.client_ret}"
                         end
 
