@@ -6,6 +6,5 @@ else
 end
 # Specify your gem's dependencies in woolen_common.gemspec
 
-gem 'splib'
 gem 'ffi'
 gemspec
