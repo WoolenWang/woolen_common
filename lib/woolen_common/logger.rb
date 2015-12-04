@@ -317,17 +317,23 @@ module WoolenCommon
         end
 
         def self.get_conf
-            SingleLogger.logger_config ||= YAML.load_file(File.expand_path(File.join(ConfigManager.project_root, 'config', 'logger.yml')))
-            SingleLogger.logger_config
+            the_cfg_file = File.expand_path(File.join(ConfigManager.project_root, 'config', 'logger.yml'))
+            if SingleLogger.logger_config.blank?
+                if File.exist?(the_cfg_file)
+                    SingleLogger.logger_config = YAML.load_file(the_cfg_file)
+                end
+            end
+            return SingleLogger.logger_config if SingleLogger.logger_config
+            {}
         end
-
-        key = get_conf['default']
-        SingleLogger.my_logger ||= MyLogger.new({ :stdout => get_conf[key]['stdout'], :name => key,
-                                                  :file => File.join(ConfigManager.project_root, get_conf[key]['file']),
-                                                  :roll_type => get_conf[key]['roll_type'],
-                                                  :roll_param => get_conf[key]['roll_param'],
-                                                  :level => get_conf[key]['level'],
-                                                  :log_cache => get_conf[key]['log_cache'],
+        log_cfg = get_conf[(get_conf['default'] || 'dev')] || {}
+        SingleLogger.my_logger ||= MyLogger.new({ :stdout => log_cfg['stdout'] || 1, :name => key,
+                                                  :file => File.join(ConfigManager.project_root, log_cfg['file'] || './log/dev.log'),
+                                                  :roll_type => log_cfg['roll_type'] || 'file_size',
+                                                  :roll_param => log_cfg['roll_param'] || '5M',
+                                                  :max_log_cnt => log_cfg['max_log_cnt'] || 10,
+                                                  :level => log_cfg['level'] || 'debug',
+                                                  :log_cache => log_cfg['log_cache'] || 0,
                                                   :caller => 2 })
 
         def self.new(*args)

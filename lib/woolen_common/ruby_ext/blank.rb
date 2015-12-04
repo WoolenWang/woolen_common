@@ -89,7 +89,7 @@ end
 
 class String
     # 0x3000: fullwidth whitespace
-    NON_WHITESPACE_REGEXP ||= %r![^\s#{[0x3000].pack("U")}]!
+    NON_WHITESPACE_REGEXP = %r![^\s#{[0x3000].pack("U")}]! unless defined? NON_WHITESPACE_REGEXP
 
     # A string is blank if it's empty or contains whitespaces only:
     #
