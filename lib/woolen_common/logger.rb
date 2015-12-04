@@ -326,7 +326,8 @@ module WoolenCommon
             return SingleLogger.logger_config if SingleLogger.logger_config
             {}
         end
-        log_cfg = get_conf[(get_conf['default'] || 'dev')] || {}
+        key = get_conf['default'] || 'dev'
+        log_cfg = get_conf[key] || {}
         SingleLogger.my_logger ||= MyLogger.new({ :stdout => log_cfg['stdout'] || 1, :name => key,
                                                   :file => File.join(ConfigManager.project_root, log_cfg['file'] || './log/dev.log'),
                                                   :roll_type => log_cfg['roll_type'] || 'file_size',
