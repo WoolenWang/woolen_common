@@ -2,6 +2,9 @@
 require 'singleton'
 require "#{File.join(File.dirname(__FILE__), 'actionpool')}"
 require "#{File.join(File.dirname(__FILE__), 'logger')}"
+# 防止1.8.7不存在
+class BasicObject
+end
 module WoolenCommon
     class ActionPoolProxy < BasicObject
         MAX_THREAD = 10
