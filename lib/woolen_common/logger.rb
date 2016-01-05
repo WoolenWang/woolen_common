@@ -19,23 +19,23 @@ module WoolenCommon
         BACKGROUND_RED = 64
         BACKGROUND_INTENSITY = 128
         WIN32COLORS = [
-          "default",	"black",		"navy",			"green",
-          "teal",		"maroon",		"purple",		"olive",
-          "silver",	"gray",			"blue",			"lime",
-          "aqua",		"red",			"fuchsia",		"yellow",
-          "white"
+            "default", "black", "navy", "green",
+            "teal", "maroon", "purple", "olive",
+            "silver", "gray", "blue", "lime",
+            "aqua", "red", "fuchsia", "yellow",
+            "white"
         ]
         WIN32_FOREGROUND_COLOR_MOD = [
-          -1,0,
-          FOREGROUND_BLUE , FOREGROUND_GREEN ,FOREGROUND_BLUE | FOREGROUND_GREEN,
-          FOREGROUND_RED,	FOREGROUND_BLUE | FOREGROUND_RED,FOREGROUND_RED | FOREGROUND_GREEN,
-          FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
+            -1, 0,
+            FOREGROUND_BLUE, FOREGROUND_GREEN, FOREGROUND_BLUE | FOREGROUND_GREEN,
+            FOREGROUND_RED, FOREGROUND_BLUE | FOREGROUND_RED, FOREGROUND_RED | FOREGROUND_GREEN,
+            FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
         ]
         WIN32_BACKGROUND_COLOR_MOD = [
-          -1,0,
-          BACKGROUND_BLUE , BACKGROUND_GREEN ,BACKGROUND_BLUE | BACKGROUND_GREEN,
-          BACKGROUND_RED,	BACKGROUND_BLUE | BACKGROUND_RED,BACKGROUND_RED | BACKGROUND_GREEN,
-          BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
+            -1, 0,
+            BACKGROUND_BLUE, BACKGROUND_GREEN, BACKGROUND_BLUE | BACKGROUND_GREEN,
+            BACKGROUND_RED, BACKGROUND_BLUE | BACKGROUND_RED, BACKGROUND_RED | BACKGROUND_GREEN,
+            BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED
         ]
         # WIN_PRINTER = Pathname.new(File.join(__FILE__, '..', '..', '..', 'bin', 'puts_color.exe')).realpath.to_s
         attr_reader :file, :stdout, :name
@@ -69,19 +69,19 @@ module WoolenCommon
             end
         end
 
-        def win32_puts_color(message,color)
-            require "#{File.join(File.dirname(__FILE__),'ffi', 'win32_kernel32')}"
+        def win32_puts_color(message, color)
+            require "#{File.join(File.dirname(__FILE__), 'ffi', 'win32_kernel32')}"
             the_out_handle = Win32Kernel32.getStdHandle Win32Kernel32::STD_OUTPUT_HANDLE
             if WIN32COLORS.include? color
-              if WIN32COLORS.index(color) >= WIN32_FOREGROUND_COLOR_MOD.length
-                the_color_mod = WIN32_FOREGROUND_COLOR_MOD[WIN32COLORS.index(color) % WIN32_FOREGROUND_COLOR_MOD.length] | FOREGROUND_INTENSITY
-              else
-                the_color_mod = WIN32_FOREGROUND_COLOR_MOD[WIN32COLORS.index(color)]
-              end
+                if WIN32COLORS.index(color) >= WIN32_FOREGROUND_COLOR_MOD.length
+                    the_color_mod = WIN32_FOREGROUND_COLOR_MOD[WIN32COLORS.index(color) % WIN32_FOREGROUND_COLOR_MOD.length] | FOREGROUND_INTENSITY
+                else
+                    the_color_mod = WIN32_FOREGROUND_COLOR_MOD[WIN32COLORS.index(color)]
+                end
             end
             Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & the_color_mod
             printf "#{message}\n"
-            Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED )
+            Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
         end
 
         def my_puts(message, color = nil)
@@ -97,7 +97,7 @@ module WoolenCommon
             #puts "=> init logger with: #{attrs.inspect}"
             @stdout = (attrs[:stdout] == 1)
             @name = attrs[:name]
-            @filename = attrs[:file]
+            @filename = "#{attrs[:file]}_#{Process.pid}"
             FileUtils.mkdir_p(File.dirname(@filename))
             @file = File.open(@filename, "a+") if @filename
             @roll_type = attrs[:roll_type]
@@ -326,6 +326,7 @@ module WoolenCommon
             return SingleLogger.logger_config if SingleLogger.logger_config
             {}
         end
+
         key = get_conf['default'] || 'dev'
         log_cfg = get_conf[key] || {}
         SingleLogger.my_logger ||= MyLogger.new({ :stdout => log_cfg['stdout'] || 1, :name => key,

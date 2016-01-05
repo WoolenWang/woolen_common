@@ -9,7 +9,9 @@ module WoolenCommon
                 info 'Press ENTER or c-C to stop it'
                 $stdout.flush
                 begin
-                    STDIN.gets
+                    loop do
+                        sleep 1
+                    end
                 rescue Interrupt
                     info 'Interrupt'
                 end
