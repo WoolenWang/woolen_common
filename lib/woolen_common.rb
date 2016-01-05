@@ -24,6 +24,7 @@ module WoolenCommon
         require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'type_helper')}"
         require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'logger')}"
         require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'system_helper')}"
+        require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'system_monitor')}"
         require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'splib')}"
         require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'action_pool_proxy')}"
         require "#{File.join(File.dirname(__FILE__), 'woolen_common', 'ssh_proxy')}"

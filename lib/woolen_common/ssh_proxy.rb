@@ -1,4 +1,5 @@
 # -*- encoding : utf-8 -*-
+require 'net/ssh'
 require "#{File.join(File.dirname(__FILE__), 'logger')}"
 module WoolenCommon
     class SshProxy
@@ -21,8 +22,10 @@ module WoolenCommon
             @user = user
             @options = options
             @conn_retry = options[:proxy_conn_retry] || 5
+            options.delete :proxy_conn_retry if options[:proxy_conn_retry]
             # 超时时间设置30秒太长了，不是很合理，实际上5秒没有回复，那就是出问题了
             @conn_timeout = options[:proxy_conn_timeout] || 5
+            options.delete :proxy_conn_timeout if options[:proxy_conn_timeout]
             proxy_reset_conn
         end
 
@@ -30,7 +33,7 @@ module WoolenCommon
             @conn_retry.times do
                 begin
                     Timeout.timeout(@conn_timeout) do
-                        @ssh_conn = Net::SSH.startup_app(@host, @user, @options)
+                        @ssh_conn = Net::SSH.start(@host, @user, @options)
                         if check_connector_close
                             debug 'reconnect ssh ok'
                             return

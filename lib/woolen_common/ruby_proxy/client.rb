@@ -122,7 +122,6 @@ module ATU
                             RubyProxy::DRbClient.client.copy_env(ENV.to_hash)
                             ClientRet.job_id = RubyProxy::DRbClient.client.proxy(self.name.to_s, name.to_s, *arg, &block)
                             ClientRet.get_job_ret
-                            # puts "need to do client_proxy_ret :#{ClientRet.client_ret}"
                         end
 
                     end
