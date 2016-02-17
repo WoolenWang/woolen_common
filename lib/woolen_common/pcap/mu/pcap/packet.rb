@@ -93,7 +93,7 @@ module Mu
                 io = StringIO.new
                 write io
                 io.close
-                return io.string
+                return "#{io.string}\0"
             end
 
             def == other

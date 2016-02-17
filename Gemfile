@@ -7,4 +7,5 @@ end
 # Specify your gem's dependencies in woolen_common.gemspec
 
 gem 'ffi'
+gem 'net-sftp'
 gemspec

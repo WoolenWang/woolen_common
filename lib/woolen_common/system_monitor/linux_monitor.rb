@@ -6,6 +6,7 @@ module WoolenCommon
         LINUX_MEM_STAT='/proc/meminfo'
         LINUX_DISK_STAT='/proc/diskstats'
         LINUX_DISK_PARTITION_STAT='/proc/partitions'
+        SYS_NET_PATH = '/sys/class/net'
 
         CPU_STAT_FORMAT = %w{cpu user nice system idle io_wait irq soft_irq steal guest}
         DISK_STAT_FORMAT = %w{disk r_io/s w_io/s r_kB/s w_kB/s r_size w_size}
@@ -54,9 +55,9 @@ module WoolenCommon
 
         def get_system_cpu_usage(time=1)
             result = []
-            old_arry = File.open(LINUX_CPU_STAT, 'r') {|f| f.read.split("\n")}
+            old_arry = File.open(LINUX_CPU_STAT, 'r') { |f| f.read.split("\n") }
             sleep time
-            new_arry = File.open(LINUX_CPU_STAT, 'r') {|f| f.read.split("\n")}
+            new_arry = File.open(LINUX_CPU_STAT, 'r') { |f| f.read.split("\n") }
             0.upto old_arry.length do |cnt|
                 if old_arry[cnt] =~ /^cpu/
                     the_cpu_usage = get_one_cpu_usage old_arry[cnt].strip, new_arry[cnt].strip
@@ -67,22 +68,23 @@ module WoolenCommon
         end
 
         def get_system_mem_usage
-            mem_array = File.open(LINUX_MEM_STAT, 'r') {|f| f.read.split("\n")}
+            mem_array = File.open(LINUX_MEM_STAT, 'r') { |f| f.read.split("\n") }
             total_mem = 0
             available_mem = 0
             mem_array.each do |one_line|
                 line = one_line.strip.downcase
                 case line
                     when /MemTotal/i
-                        total_mem = line.gsub(/\D/,'').to_i
+                        total_mem = line.gsub(/\D/, '').to_i
                         debug "total mem #{total_mem}"
-                    when /MemAvailable/i
-                        available_mem = line.gsub(/\D/,'').to_i
+                    when /MemFree/i
+                        available_mem = line.gsub(/\D/, '').to_i
                         debug "available_mem #{available_mem}"
                     else
                         trace "line[#{line}]"
                 end
             end
+
             if total_mem > 0
                 ((total_mem - available_mem) / total_mem.to_f * 100).round 3
             else
@@ -92,12 +94,12 @@ module WoolenCommon
         end
 
 
-        def get_one_disk_status(old_line,new_line,delta_time)
+        def get_one_disk_status(old_line, new_line, delta_time)
             old_arr = old_line.split(/\s+/)
             new_arr = new_line.split(/\s+/)
             new = new_arr.drop(2)
             old = old_arr.drop(2)
-            block_size = File.open("/sys/dev/block/#{new_arr[0]}:#{new_arr[1]}/queue/logical_block_size", 'r') {|f| f.read}.to_i
+            block_size = File.open("/sys/dev/block/#{new_arr[0]}:#{new_arr[1]}/queue/logical_block_size", 'r') { |f| f.read }.to_i
             if old[0] != new[0]
                 error "wrong dis check line old[#{old_line}] new[#{new_line}]"
             end
@@ -131,8 +133,8 @@ module WoolenCommon
 
         def get_disk_hash
             real_disk = {}
-            disk_array = File.open(LINUX_DISK_PARTITION_STAT, 'r') {|f| f.read.split("\n")}
-            0.upto(disk_array.length-1)  do |cnt|
+            disk_array = File.open(LINUX_DISK_PARTITION_STAT, 'r') { |f| f.read.split("\n") }
+            0.upto(disk_array.length-1) do |cnt|
                 unless cnt == 0
                     one_arr = disk_array[cnt].strip.split(/\s+/)
                     trace "str[#{disk_array[cnt].strip}]one arr #{one_arr}"
@@ -151,20 +153,89 @@ module WoolenCommon
         def get_io_status(time=5)
             result = []
             disk_hash = get_disk_hash
-            old_disk_arr = File.open(LINUX_DISK_STAT, 'r') {|f| f.read.split("\n")}.each{|one| one.strip!}
+            old_disk_arr = File.open(LINUX_DISK_STAT, 'r') { |f| f.read.split("\n") }.each { |one| one.strip! }
             old_time = Time.now.to_i
             sleep time
-            new_disk_arr = File.open(LINUX_DISK_STAT, 'r') {|f| f.read.split("\n")}.each{|one| one.strip!}
+            new_disk_arr = File.open(LINUX_DISK_STAT, 'r') { |f| f.read.split("\n") }.each { |one| one.strip! }
             new_time = Time.now.to_i
-            disk_hash.each do |one_disk,disk_id|
+            disk_hash.each do |one_disk, disk_id|
                 0.upto(old_disk_arr.length - 1) do |cnt|
                     if old_disk_arr[cnt] =~ Regexp.new("^#{disk_id}\\s+0\\s+#{one_disk}")
-                        result << get_one_disk_status(old_disk_arr[cnt],new_disk_arr[cnt],(new_time - old_time))
+                        result << get_one_disk_status(old_disk_arr[cnt], new_disk_arr[cnt], (new_time - old_time))
                     end
                 end
             end
             result
         end
+
+        def get_net_name(filepath=SYS_NET_PATH)
+            net_name = []
+            if File.directory?(filepath)
+                Dir.foreach(filepath) do |filename|
+                    if filename != "." and filename != ".." and filename != "lo"
+                        net_name << filename
+                    end
+                end
+            else
+                puts "Files:" + filepath
+            end
+            net_name
+        end
+
+
+        def get_net_bytes
+            net_name = get_net_name
+            hash_tmp = {}
+            net_name.each do |one_name|
+                hash_tmp[one_name] = {}
+                File.open("/sys/class/net/#{one_name}/statistics/tx_bytes", 'r') do |f|
+                    hash_tmp[one_name]['tx_bytes'] = f.read.strip
+                end
+                File.open("/sys/class/net/#{one_name}/statistics/rx_bytes", 'r') do |f|
+                    hash_tmp[one_name]['rx_bytes'] = f.read.strip
+                end
+            end
+            hash_tmp
+        end
+
+        def get_system_net_speed
+            old_hash = get_net_bytes
+            puts old_hash
+
+            sleep 1
+            new_hash = get_net_bytes
+            puts new_hash
+            hash_tmp = {}
+            new_hash.each do |key, value|
+                hash_tmp[key] = {}
+                hash_tmp[key]['tx_bytes'] = value['tx_bytes'].to_i - old_hash[key]['tx_bytes'].to_i
+                hash_tmp[key]['rx_bytes'] = value['rx_bytes'].to_i - old_hash[key]['rx_bytes'].to_i
+            end
+            hash_tmp
+        end
+
+        def get_common_performance
+            performance_hash = {}
+            performance_hash['cpu'] = get_system_cpu_usage[0]['total']
+            performance_hash['memory'] = get_system_mem_usage
+
+            ret_disk_arr = get_io_status
+            if ret_disk_arr
+                performance_hash['r_iops'] = ret_disk_arr[0]['r_io/s']
+                performance_hash['w_iops'] = ret_disk_arr[0]['w_io/s']
+                performance_hash['r_kBps'] = ret_disk_arr[0]['r_kB/s']
+                performance_hash['w_kBps'] = ret_disk_arr[0]['w_kB/s']
+            end
+
+            #get_system_net_speed获取所有网卡的传输速率，前台仅显示eth0的速率
+            ret_net_hash = get_system_net_speed
+            if ret_net_hash
+                performance_hash['net_tx_bytes'] = ret_net_hash['eth0']['tx_bytes']
+                performance_hash['net_rx_bytes'] = ret_net_hash['eth0']['rx_bytes']
+            end
+            performance_hash
+        end
+
 
         def self.included(base)
             base.extend self
