@@ -143,7 +143,7 @@ module WoolenCommon
             # fix Error::EACCESS exception throw when file is opened before rename by lyf
             begin
                 FileUtils.cp(@file.path, newfilename)
-                log_patten = File.join(File.dirname(@file), '*.log')
+                log_patten = File.join(File.dirname(@file), '*.log*')
                 @file.flush
                 @file.close
                 FileUtils.rm_f(@file.path)

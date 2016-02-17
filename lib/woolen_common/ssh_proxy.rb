@@ -64,6 +64,26 @@ module WoolenCommon
             end
         end
 
+        def exec!(command, &block)
+            if check_connector_close
+                @ssh_conn.close rescue nil
+                proxy_reset_conn
+            end
+            Timeout.timeout(@conn_timeout) do
+                return @ssh_conn.exec!(command.unpack('C*').pack('C*'), &block)
+            end
+        end
+
+        def exec(command, &block)
+            if check_connector_close
+                @ssh_conn.close rescue nil
+                proxy_reset_conn
+            end
+            Timeout.timeout(@conn_timeout) do
+                return @ssh_conn.exec(command.unpack('C*').pack('C*'), &block)
+            end
+        end
+
         def check_connector_close
             begin
                 if @ssh_conn.nil? or @ssh_conn.closed?

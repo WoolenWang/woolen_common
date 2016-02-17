@@ -115,6 +115,7 @@ module Mu
                 else
                     string_io = StringIO.new
                     @payload.write string_io, self
+                    string_io.close
                     payload = string_io.string
                 end
                 length = 20 + payload.bytesize
