@@ -17,7 +17,7 @@ class MyTest < Test::Unit::TestCase
 
     # Fake test
     def test_log
-        100.times do
+        10000.times do
             debug 'test'
             info 'test'
             warn 'test'
