@@ -11,6 +11,9 @@ module RubyProxy
         JOBS_RETURN_ARRAY = []
         MAX_HANDLE_THREAD = 1
         $__proxy_job_id ||= 0
+        class << self
+            attr_accessor :worker_flag
+        end
 
         def self.proxy(klass_name, method=nil, *arg)
             job = {}
@@ -23,16 +26,26 @@ module RubyProxy
             job[:id]
         end
 
+        def self.set_work_flag(flag)
+            info "setting set_work_flag #{flag}"
+            self.worker_flag = flag
+        end
+
         def self.worker_start
+            self.worker_flag = true
             MAX_HANDLE_THREAD.times do |cnt|
                 debug "starting worker :#{cnt}"
                 Thread.new do
                     loop do
                         the_job = nil
                         begin
-                            the_job = JOBS_QUEUE.pop
-                            if the_job
-                                handle_job the_job
+                            if self.worker_flag
+                                the_job = JOBS_QUEUE.pop
+                                if the_job
+                                    handle_job the_job
+                                end
+                            else
+                                sleep 0.5
                             end
                         rescue Exception => e
                             error "handle job error :#{e}", e

@@ -214,7 +214,7 @@ module WoolenCommon
             hash_tmp
         end
 
-        def get_common_performance
+        def get_common_performance(monitor_cfg)
             performance_hash = {}
             performance_hash['cpu'] = get_system_cpu_usage[0]['total']
             performance_hash['memory'] = get_system_mem_usage
@@ -230,8 +230,12 @@ module WoolenCommon
             #get_system_net_speed获取所有网卡的传输速率，前台仅显示eth0的速率
             ret_net_hash = get_system_net_speed
             if ret_net_hash
-                performance_hash['net_tx_bytes'] = ret_net_hash['eth0']['tx_bytes']
-                performance_hash['net_rx_bytes'] = ret_net_hash['eth0']['rx_bytes']
+                monitor_cfg['net_if_ids'].each do |one_if_id|
+                    if ret_net_hash["eth#{one_if_id}"]
+                        performance_hash['net_tx_bytes'] = ret_net_hash["eth#{one_if_id}"]['tx_bytes']
+                        performance_hash['net_rx_bytes'] = ret_net_hash["eth#{one_if_id}"]['rx_bytes']
+                    end
+                end
             end
             performance_hash
         end

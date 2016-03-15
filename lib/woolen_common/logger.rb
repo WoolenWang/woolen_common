@@ -97,13 +97,12 @@ module WoolenCommon
             #puts "=> init logger with: #{attrs.inspect}"
             @stdout = (attrs[:stdout] == 1)
             @name = attrs[:name]
-            @filename = "#{attrs[:file]}_#{Process.pid}"
+            @filename = attrs[:file].gsub(/\.log/,".#{Process.pid}.log")
             FileUtils.mkdir_p(File.dirname(@filename))
-            @file = File.open(@filename, "a+") if @filename
             @roll_type = attrs[:roll_type]
             @roll_param = attrs[:roll_param]
-            @log_cache = attrs[:log_cache]
-            @max_log_cnt = attrs[:max_log_cnt]
+            @log_cache = attrs[:log_cache].blank? ? 1 : attrs[:max_log_cnt].to_i
+            @max_log_cnt = attrs[:max_log_cnt].blank? ? 10 : attrs[:max_log_cnt].to_i
             @cache_msg = {}
             @cache_count = 0
             @caller = attrs[:caller] || 1
@@ -118,6 +117,9 @@ module WoolenCommon
             end
             @level = LEVELS.index(attrs[:level].upcase) || 1
             @last_log_time = nil
+            clean_log @filename
+            @file = File.open(@filename, "a+") if @filename
+            # clean_log
         end
 
 
@@ -142,18 +144,10 @@ module WoolenCommon
         def rename_and_create_new(newfilename)
             # fix Error::EACCESS exception throw when file is opened before rename by lyf
             begin
-                FileUtils.cp(@file.path, newfilename)
-                log_patten = File.join(File.dirname(@file), '*.log*')
                 @file.flush
                 @file.close
-                FileUtils.rm_f(@file.path)
-                sort_time_files = Dir[log_patten].sort_by { |file| test(?M, file) }
-                if @max_log_cnt && @max_log_cnt > 0 && sort_time_files.length > @max_log_cnt
-                    (@max_log_cnt - sort_time_files.length).times do |cnt|
-                        FileUtils.rm_f sort_time_files[cnt]
-                    end
-                end
-                sleep 2
+                FileUtils.cp(@file.path, newfilename)
+                clean_log @file.path
                 @file.reopen(@file.path, "w")
             rescue Exception => e
                 puts "error when try to  rename_and_create_new #{newfilename}"
@@ -161,6 +155,20 @@ module WoolenCommon
             #unless (FileUtils.cp(@file.path, newfilename) and FileUtils.rm_f(@file.path) and @file.reopen(@file.path, "w"))
             #    #puts "==> error rename #{@filename} => #{newfilename}"
             #end
+        end
+
+        def clean_log(the_path)
+            log_patten = File.join(File.dirname(the_path), '*.log')
+            # puts "need clean #{the_path}"
+            FileUtils.rm_f(the_path)
+            sort_time_files = Dir[log_patten].sort_by { |file| test(?M, file) }
+            # puts "sort_time_files #{sort_time_files}"
+            if @max_log_cnt && @max_log_cnt > 0 && sort_time_files.length > @max_log_cnt
+                (sort_time_files.length - @max_log_cnt).times do |cnt|
+                    puts "need to del #{sort_time_files[cnt]} cnt #{cnt}"
+                    FileUtils.rm_f sort_time_files[cnt]
+                end
+            end
         end
 
         def check_split_file

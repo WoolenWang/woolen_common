@@ -3,12 +3,12 @@
 #  level:: trace debug info warn error fatal
 dev:
   level: debug
-  stdout: 1
+  stdout: 0
   file: ./log/dev.log
   log_cache: 0
   roll_type: file_size
-  max_log_cnt: 10
-  roll_param: 5M          # support K/M
+  max_log_cnt: 2
+  roll_param: 1K          # support K/M
 pro:
   level: info
   stdout: 0
