@@ -19,9 +19,10 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
   #spec.extensions = ['ext/woolen_common/extconf.rb']
 
-  spec.add_development_dependency 'bundler'
+  spec.add_development_dependency 'bundler', '~> 0'
   spec.add_development_dependency 'rake', '~> 10.0'
 
-  spec.add_dependency 'ffi'
-  spec.add_dependency 'net-sftp'
+  spec.add_runtime_dependency 'ffi', '~> 0'
+  spec.add_runtime_dependency 'net-ssh', '~> 2.9', '>= 2.9.1'
+  spec.add_runtime_dependency 'net-sftp', '~> 2.1', '>= 2.1.2'
 end
