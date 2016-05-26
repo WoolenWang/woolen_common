@@ -1,5 +1,6 @@
 # -*- encoding : utf-8 -*-
 require 'net/ssh'
+require 'net/sftp'
 require "#{File.join(File.dirname(__FILE__), 'logger')}"
 module WoolenCommon
     class SshProxy
@@ -33,6 +34,11 @@ module WoolenCommon
             @conn_retry.times do
                 begin
                     Timeout.timeout(@conn_timeout) do
+                        # if Net::SSH::Version.to_i <= 3_000_000
+                        #     @ssh_conn = Net::SSH.start(@host, @user, @options)
+                        # else
+                        #     @ssh_conn = Net::SSH.start(@host, @user, @options)
+                        # end
                         @ssh_conn = Net::SSH.start(@host, @user, @options)
                         if check_connector_close
                             debug 'reconnect ssh ok'

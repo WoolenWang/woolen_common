@@ -3,7 +3,7 @@
 #  level:: trace debug info warn error fatal
 dev:
   level: debug
-  stdout: 0
+  stdout: 1
   file: ./log/dev.log
   log_cache: 0
   roll_type: file_size
