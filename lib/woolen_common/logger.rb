@@ -101,7 +101,7 @@ module WoolenCommon
             FileUtils.mkdir_p(File.dirname(@filename))
             @roll_type = attrs[:roll_type]
             @roll_param = attrs[:roll_param]
-            @log_cache = attrs[:log_cache].blank? ? 1 : attrs[:max_log_cnt].to_i
+            @log_cache = attrs[:log_cache].blank? ? 1 : attrs[:log_cache].to_i
             @max_log_cnt = attrs[:max_log_cnt].blank? ? 10 : attrs[:max_log_cnt].to_i
             @cache_msg = {}
             @cache_count = 0
