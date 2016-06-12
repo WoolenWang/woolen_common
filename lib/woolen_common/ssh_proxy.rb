@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
-require 'net/ssh'
-require 'net/sftp'
+require 'net/ssh' rescue nil
+require 'net/sftp' rescue nil
 require "#{File.join(File.dirname(__FILE__), 'logger')}"
 module WoolenCommon
     class SshProxy
