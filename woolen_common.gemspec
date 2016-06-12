@@ -24,11 +24,6 @@ Gem::Specification.new do |spec|
     spec.add_development_dependency 'rake', '~> 10.0'
 
     spec.add_runtime_dependency 'ffi'
-    if RUBY_VERSION <= '2.0.0'
-        spec.add_runtime_dependency 'net-ssh', '~> 2.9', '>= 2.9.1'
-        spec.add_runtime_dependency 'net-sftp', '~> 2.1', '>= 2.1.2'
-    else
-        spec.add_runtime_dependency 'net-ssh', '>= 2.9.1'
-        spec.add_runtime_dependency 'net-sftp', '>= 2.1.2'
-    end
+    # spec.add_runtime_dependency 'net-ssh', '>= 2.9.1'
+    # spec.add_runtime_dependency 'net-sftp', '>= 2.1.2'
 end
