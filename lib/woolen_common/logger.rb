@@ -78,10 +78,12 @@ module WoolenCommon
                 else
                     the_color_mod = WIN32_FOREGROUND_COLOR_MOD[WIN32COLORS.index(color)]
                 end
+                Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & the_color_mod
+                print "#{message}\n"
+                Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
+            else
+                print "#{message}\n"
             end
-            Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & the_color_mod
-            printf "#{message}\n"
-            Win32Kernel32.setConsoleTextAttribute the_out_handle, 0x00ff & (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
         end
 
         def my_puts(message, color = nil)
@@ -161,12 +163,14 @@ module WoolenCommon
             log_patten = File.join(File.dirname(the_path), '*.log')
             # puts "need clean #{the_path}"
             FileUtils.rm_f(the_path)
-            sort_time_files = Dir[log_patten].sort_by { |file| test(?M, file) }
+            sort_time_files = Dir[log_patten].sort_by { |file|
+                test(?M, file) if File.exists?(file)
+            }
             # puts "sort_time_files #{sort_time_files}"
             if @max_log_cnt && @max_log_cnt > 0 && sort_time_files.length > @max_log_cnt
                 (sort_time_files.length - @max_log_cnt).times do |cnt|
                     puts "need to del #{sort_time_files[cnt]} cnt #{cnt}"
-                    FileUtils.rm_f sort_time_files[cnt]
+                    FileUtils.rm_f sort_time_files[cnt] if File.exists?(sort_time_files[cnt])
                 end
             end
         end
