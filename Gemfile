@@ -12,7 +12,6 @@ end
 # Specify your gem's dependencies in woolen_common.gemspec
 
 gem 'ffi'
-gem 'connection_pool'
 puts "version #{RUBY_VERSION}"
 if RUBY_VERSION < '2.0.0'
     gem 'net-ssh', '~> 2.9'
