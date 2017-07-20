@@ -2,7 +2,7 @@
 begin
     require 'net/ssh' rescue nil
     require 'net/sftp' rescue nil
-    require 'connection_pool'
+    require 'woolen_common/connection_pool'
     require "#{File.join(File.dirname(__FILE__), 'logger')}"
     module WoolenCommon
         class SshProxyPool
@@ -32,7 +32,7 @@ begin
             end
 
             def get_pool
-                @ssh_connection_pool ||= ::ConnectionPool.new({:size => @max_ssh, :timeout => @time_out}) do
+                @ssh_connection_pool ||= ::WoolenCommon::ConnectionPool.new({:size => @max_ssh, :timeout => @time_out}) do
                     debug "ip:#{@ip},@password:#{@password},@port:#{@port}"
                     ::WoolenCommon::SshProxy.new(@ip, @user, :password => @password, :port => @port)
                 end
