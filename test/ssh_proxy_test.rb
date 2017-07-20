@@ -26,4 +26,16 @@ class MyTest < Test::Unit::TestCase
         local_proxy.sftp_upload!(File.expand_path(File.join(File.dirname(__FILE__),'cpu_info_xx')),File.expand_path(File.join(File.dirname(__FILE__),'cpu_info')))
         assert_equal true,File.exists?(File.expand_path(File.join(File.dirname(__FILE__),'cpu_info_xx')))
     end
+
+
+    # Fake test
+    def test_pool_exec
+        local_proxy = WoolenCommon::SshProxyPool.get_ssh_proxy 'localhost','test','test',22
+        assert_equal local_proxy.exec!('echo hello'),"hello\n"
+        local_proxy.exec('echo hello')
+        local_proxy.sftp_download!('/proc/cpuinfo',File.expand_path(File.join(File.dirname(__FILE__),'cpu_info')))
+        assert_equal true,File.exists?(File.expand_path(File.join(File.dirname(__FILE__),'cpu_info')))
+        local_proxy.sftp_upload!(File.expand_path(File.join(File.dirname(__FILE__),'cpu_info_xx')),File.expand_path(File.join(File.dirname(__FILE__),'cpu_info')))
+        assert_equal true,File.exists?(File.expand_path(File.join(File.dirname(__FILE__),'cpu_info_xx')))
+    end
 end
