@@ -2,11 +2,60 @@
 begin
     require 'net/ssh' rescue nil
     require 'net/sftp' rescue nil
+    require 'connection_pool'
     require "#{File.join(File.dirname(__FILE__), 'logger')}"
     module WoolenCommon
-        class SshProxy
-            include ToolLogger
+        class SshProxyPool
+            include WoolenCommon::ToolLogger
+
             class << self
+                attr_accessor :the_ssh_instances
+                def get_ssh_proxy(ip, user, password, port=22, max_ssh=10, time_out=10)
+                    @the_ssh_instances ||= {}
+                    @the_ssh_instances[ip] ||= {}
+                    @the_ssh_instances[ip][port] ||= {}
+                    @the_ssh_instances[ip][port][user] ||= {}
+                    @the_ssh_instances[ip][port][user][password] ||= self.new(ip, user, password, port=22, max_ssh=10, time_out=10)
+                    @the_ssh_instances[ip][port][user][password]
+                end
+            end
+
+            def initialize(ip, user, password, port=22, max_ssh=10, time_out=10)
+                debug "ssh setup : [ user::#{user},password::#{password},port:#{port} ]"
+                @ip = ip
+                @user = user
+                @password = password
+                @port = port
+                @max_ssh = max_ssh
+                @time_out = time_out
+                get_pool
+            end
+
+            def get_pool
+                @ssh_connection_pool ||= ::ConnectionPool.new({:size => @max_ssh, :timeout => @time_out}) do
+                    debug "ip:#{@ip},@password:#{@password},@port:#{@port}"
+                    ::WoolenCommon::SshProxy.new(@ip, @user, :password => @password, :port => @port)
+                end
+            end
+
+            def method_missing(method, *args, &block)
+                debug "need to invoke ssh method ::#{method} #{args}"
+                self.instance_eval <<-THE_END
+                    def #{method}(*args,&block)
+                        trace "need to invoke ssh method ::#{method} \#{args}"
+                        get_pool.with do |ssh_conn|
+                            return ssh_conn.send :#{method}, *args, &block
+                        end
+                    end
+                THE_END
+                self.send method, *args, &block
+            end
+        end
+
+        class SshProxy
+            include WoolenCommon::ToolLogger
+            class << self
+
                 attr_accessor :the_ssh_instances
                 def get_ssh_proxy(ip,port,user,passwd)
                     options = {:port => port,:password => passwd}
