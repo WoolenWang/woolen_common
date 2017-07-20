@@ -2,7 +2,7 @@
 begin
     require 'net/ssh' rescue nil
     require 'net/sftp' rescue nil
-    require 'woolen_common/connection_pool'
+    require "#{File.join(File.dirname(__FILE__), 'connection_pool')}"
     require "#{File.join(File.dirname(__FILE__), 'logger')}"
     module WoolenCommon
         class SshProxyPool

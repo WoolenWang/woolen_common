@@ -1,4 +1,3 @@
-require_relative 'connection_pool/version'
 require_relative 'connection_pool/timed_stack'
 
 
