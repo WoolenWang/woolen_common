@@ -34,7 +34,7 @@ begin
             def get_pool
                 @ssh_connection_pool ||= ::WoolenCommon::ConnectionPool.new({:size => @max_ssh, :timeout => @time_out}) do
                     debug "ip:#{@ip},@password:#{@password},@port:#{@port}"
-                    ::WoolenCommon::SshProxy.new(@ip, @user, :password => @password, :port => @port)
+                    ::WoolenCommon::SshProxy.new(@ip, @user, :password => @password, :port => @port,:proxy_conn_timeout => @time_out)
                 end
             end
 
