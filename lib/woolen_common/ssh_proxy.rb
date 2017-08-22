@@ -10,18 +10,19 @@ begin
 
             class << self
                 attr_accessor :the_ssh_instances
+
                 def get_ssh_proxy(ip, user, password, port=22, max_ssh=10, time_out=10)
                     @the_ssh_instances ||= {}
                     @the_ssh_instances[ip] ||= {}
                     @the_ssh_instances[ip][port] ||= {}
                     @the_ssh_instances[ip][port][user] ||= {}
-                    @the_ssh_instances[ip][port][user][password] ||= self.new(ip, user, password, port=22, max_ssh=10, time_out=10)
+                    @the_ssh_instances[ip][port][user][password] ||= self.new(ip, user, password, port, max_ssh, time_out)
                     @the_ssh_instances[ip][port][user][password]
                 end
             end
 
             def initialize(ip, user, password, port=22, max_ssh=10, time_out=10)
-                debug "ssh setup : [ user::#{user},password::#{password},port:#{port} ]"
+                debug "ssh setup : [ user::#{user},password::#{password},port:#{port}, time_out #{time_out} ]"
                 @ip = ip
                 @user = user
                 @password = password
@@ -32,9 +33,9 @@ begin
             end
 
             def get_pool
-                @ssh_connection_pool ||= ::WoolenCommon::ConnectionPool.new({:size => @max_ssh, :timeout => @time_out}) do
+                @ssh_connection_pool ||= ::WoolenCommon::ConnectionPool.new({ :size => @max_ssh, :timeout => @time_out }) do
                     debug "ip:#{@ip},@password:#{@password},@port:#{@port}"
-                    ::WoolenCommon::SshProxy.new(@ip, @user, :password => @password, :port => @port,:proxy_conn_timeout => @time_out)
+                    ::WoolenCommon::SshProxy.new(@ip, @user, :password => @password, :port => @port, :proxy_conn_timeout => @time_out)
                 end
             end
 
@@ -57,8 +58,9 @@ begin
             class << self
 
                 attr_accessor :the_ssh_instances
-                def get_ssh_proxy(ip,port,user,passwd)
-                    options = {:port => port,:password => passwd}
+
+                def get_ssh_proxy(ip, port, user, passwd)
+                    options = { :port => port, :password => passwd }
                     @the_ssh_instances ||= {}
                     @the_ssh_instances[ip] ||= {}
                     @the_ssh_instances[ip][port] ||= {}
@@ -185,7 +187,7 @@ begin
                     proxy_reset_conn
                 end
                 @ssh_conn.sftp.connect! do |sftp_session|
-                    return sftp_session.upload!(local_path,remote_path)
+                    return sftp_session.upload!(local_path, remote_path)
                 end
             end
 
@@ -195,7 +197,7 @@ begin
                     proxy_reset_conn
                 end
                 @ssh_conn.sftp.connect do |sftp_session|
-                    return sftp_session.upload(local_path,remote_path)
+                    return sftp_session.upload(local_path, remote_path)
                 end
             end
         end
