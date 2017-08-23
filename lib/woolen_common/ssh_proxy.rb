@@ -76,6 +76,7 @@ begin
                 @options = options
                 @conn_retry = options[:proxy_conn_retry] || 5
                 options[:paranoid] = false # for disable the public key verify
+                options[:non_interactive] = true # for disable the interactive
                 options.delete :proxy_conn_retry if options[:proxy_conn_retry]
                 # 超时时间设置30秒太长了，不是很合理，实际上5秒没有回复，那就是出问题了
                 @conn_timeout = options[:proxy_conn_timeout] || 5
