@@ -146,13 +146,13 @@ module WoolenCommon
         def rename_and_create_new(newfilename)
             # fix Error::EACCESS exception throw when file is opened before rename by lyf
             begin
-                @file.flush
-                @file.close
+                @file.flush rescue nil
+                @file.close rescue nil
                 FileUtils.cp(@file.path, newfilename)
-                clean_log @file.path
+                clean_log @file.path rescue nil
                 @file.reopen(@file.path, "w")
             rescue Exception => e
-                puts "error when try to  rename_and_create_new #{newfilename}"
+                puts "error when try to  rename_and_create_new #{newfilename},#{e.message}"
             end
             #unless (FileUtils.cp(@file.path, newfilename) and FileUtils.rm_f(@file.path) and @file.reopen(@file.path, "w"))
             #    #puts "==> error rename #{@filename} => #{newfilename}"
@@ -175,10 +175,10 @@ module WoolenCommon
             end
         end
 
-        def check_split_file
+        def check_split_file(force=false)
             begin
-                if @roll_type == "daily"
-                    if @last_log_time && @last_log_time.day != Time.now.day
+                if @roll_type == 'daily'
+                    if force or (@last_log_time && @last_log_time.day != Time.now.day)
                         p = @file.path
                         new_name = nil
                         if p.rindex(".") > p.rindex("/")
@@ -188,8 +188,8 @@ module WoolenCommon
                         end
                         rename_and_create_new(new_name)
                     end
-                elsif @roll_type == "file_size"
-                    if File.size(@file) >= @roll_param
+                elsif @roll_type == 'file_size'
+                    if force or ( File.size(@file) >= @roll_param )
                         p = @file.path
                         new_name = nil
                         if p.rindex(".") > p.rindex("/")
@@ -244,9 +244,13 @@ module WoolenCommon
                         file_need_to_pus_cache << value
                         #@file.dup if @file
                     end
-                    if @file
-                        @file.print file_need_to_pus_cache
-                        @file.flush
+                    begin
+                        if @file
+                            @file.print file_need_to_pus_cache
+                            @file.flush
+                        end
+                    rescue Exception => es
+                        check_split_file true
                     end
                 end
                 @last_log_time = Time.now
