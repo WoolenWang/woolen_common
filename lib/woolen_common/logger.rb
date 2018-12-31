@@ -123,7 +123,8 @@ module WoolenCommon
       @level = LEVELS.index(attrs[:level].upcase) || 1
       @last_log_time = nil
       clean_log @filename
-      @file = File.open(@filename, "a+") if @filename
+      @file = File.open(@filename, "a+")
+      @log_file_lock = Mutex.new
       # clean_log
     end
 
@@ -149,11 +150,13 @@ module WoolenCommon
     def rename_and_create_new(newfilename)
       # fix Error::EACCESS exception throw when file is opened before rename by lyf
       begin
-        @file.flush rescue nil
-        @file.close rescue nil
-        FileUtils.cp(@file.path, newfilename)
-        clean_log @file.path rescue nil
-        @file.reopen(@file.path, "w")
+        @log_file_lock.synchronize do
+          @file.flush rescue nil
+          @file.close rescue nil
+          FileUtils.cp(@file.path, newfilename)
+          clean_log @file.path rescue nil
+          @file.reopen(@file.path, "w")
+        end
       rescue Exception => e
         puts "error when try to  rename_and_create_new #{newfilename},#{e.message}"
       end
@@ -231,7 +234,13 @@ module WoolenCommon
         end
         err_msg = "#{err.message}\n#{err.backtrace.join("\n\t")}" if err
         the_key = _level.strip
-        @cache_msg[the_key] ||= {:msg => '', :lock => Mutex.new}
+        unless @cache_msg[the_key]
+          CONSOLE_LOCK.synchronize do
+            unless @cache_msg[the_key]
+              @cache_msg[the_key] = {:msg => '', :lock => Mutex.new}
+            end
+          end
+        end
         @cache_msg[the_key][:lock].synchronize do
           @cache_msg[the_key][:msg] << _msg
           @cache_msg[the_key][:msg] << err_msg if err_msg
@@ -251,8 +260,10 @@ module WoolenCommon
           end
           begin
             if @file
-              @file.print file_need_to_pus_cache
-              @file.flush
+              @log_file_lock.synchronize do
+                @file.print file_need_to_pus_cache
+                @file.flush
+              end
             end
           rescue Exception => es
             check_split_file true
