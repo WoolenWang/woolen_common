@@ -9,7 +9,7 @@ module WoolenCommon
   class MyLogger # :nodoc: all
     include SystemHelper
     LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']
-    COLORS = {'TRACE' => 'white', 'DEBUG' => 'silver', 'INFO' => 'green', 'WARN' => 'yellow', 'ERROR' => 'purple', 'FATAL' => 'red'}
+    COLORS = { 'TRACE' => 'white', 'DEBUG' => 'silver', 'INFO' => 'green', 'WARN' => 'yellow', 'ERROR' => 'purple', 'FATAL' => 'red' }
     FOREGROUND_BLUE = 1
     FOREGROUND_GREEN = 2
     FOREGROUND_RED = 4
@@ -109,6 +109,10 @@ module WoolenCommon
       @log_cache = attrs[:log_cache].blank? ? 1 : attrs[:log_cache].to_i
       @max_log_cnt = attrs[:max_log_cnt].blank? ? 10 : attrs[:max_log_cnt].to_i
       @cache_msg = {}
+      LEVELS.each do |one_lev|
+        @cache_msg[one_lev] = Queue.new
+      end
+      @cache_msg_lock = Mutex.new
       @cache_count = 0
       @caller = attrs[:caller] || 1
       if @roll_type == "file_size" && @roll_param && (@roll_param = @roll_param.to_s)
@@ -218,7 +222,7 @@ module WoolenCommon
 
     def log(_level, msg, err = nil)
       begin
-        check_split_file if @file
+        check_split_file if @file and not @file.closed?
         err_msg = nil
         line = ''
         if caller[@caller].respond_to? :include?
@@ -234,29 +238,26 @@ module WoolenCommon
         end
         err_msg = "#{err.message}\n#{err.backtrace.join("\n\t")}" if err
         the_key = _level.strip
-        unless @cache_msg[the_key]
-          CONSOLE_LOCK.synchronize do
-            unless @cache_msg[the_key]
-              @cache_msg[the_key] = {:msg => '', :lock => Mutex.new}
-            end
-          end
-        end
-        @cache_msg[the_key][:lock].synchronize do
-          @cache_msg[the_key][:msg] << _msg
-          @cache_msg[the_key][:msg] << err_msg if err_msg
-        end
+        @cache_msg[the_key] << _msg
+        @cache_msg[the_key] << err_msg if err_msg
         if @cache_count < @log_cache.to_i
           @cache_count += 1
         else
           file_need_to_pus_cache = ''
-          the_msg_cache = @cache_msg
           @cache_count = 0
-          @cache_msg = {}
-          the_msg_cache.each do |key, value|
-            my_puts value[:msg], COLORS[key] if @stdout
-            #puts "need to log with #{@file} [#{value}]"
-            file_need_to_pus_cache << value[:msg]
-            #@file.dup if @file
+          @cache_msg_lock.synchronize do
+            @cache_msg.each do |key, value|
+              value.length.times do
+                begin
+                  the_msg_data = value.pop(true)
+                  my_puts the_msg_data, COLORS[key] if @stdout
+                  #puts "need to log with #{@file} [#{value}]"
+                  file_need_to_pus_cache << the_msg_data
+                rescue Exception
+                  break
+                end
+              end
+            end
           end
           begin
             if @file
@@ -361,14 +362,14 @@ module WoolenCommon
 
     key = get_conf['default'] || 'dev'
     log_cfg = get_conf[key] || {}
-    SingleLogger.my_logger ||= MyLogger.new({:stdout => log_cfg['stdout'] || 1, :name => key,
-                                             :file => File.join(ConfigManager.project_root, log_cfg['file'] || './log/dev.log'),
-                                             :roll_type => log_cfg['roll_type'] || 'file_size',
-                                             :roll_param => log_cfg['roll_param'] || '5M',
-                                             :max_log_cnt => log_cfg['max_log_cnt'] || 10,
-                                             :level => log_cfg['level'] || 'debug',
-                                             :log_cache => log_cfg['log_cache'] || 0,
-                                             :caller => 2})
+    SingleLogger.my_logger ||= MyLogger.new({ :stdout => log_cfg['stdout'] || 1, :name => key,
+                                              :file => File.join(ConfigManager.project_root, log_cfg['file'] || './log/dev.log'),
+                                              :roll_type => log_cfg['roll_type'] || 'file_size',
+                                              :roll_param => log_cfg['roll_param'] || '5M',
+                                              :max_log_cnt => log_cfg['max_log_cnt'] || 10,
+                                              :level => log_cfg['level'] || 'debug',
+                                              :log_cache => log_cfg['log_cache'] || 0,
+                                              :caller => 2 })
 
     def self.new(*args)
       SingleLogger.my_logger || super(*args)
