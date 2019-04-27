@@ -1,5 +1,16 @@
 require 'thread'
 
+class Thread
+    # patch for exclusive
+    MUTEX_FOR_THREAD_EXCLUSIVE = Mutex.new # :nodoc:
+
+    def self.exclusive
+        MUTEX_FOR_THREAD_EXCLUSIVE.synchronize{
+            yield
+        }
+    end
+end
+
 module Splib
     Splib.load :Sleep
     # Basic exception to wakeup a monitor timer
