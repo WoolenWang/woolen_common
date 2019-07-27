@@ -202,6 +202,10 @@ begin
           return sftp_session.upload(local_path, remote_path)
         end
       end
+
+      def to_s
+        "ssh:host=>#{@host},option=>#{@options},user=>#{@user},timeout=>#{@conn_timeout}"
+      end
     end
   end
 rescue Exception => e
